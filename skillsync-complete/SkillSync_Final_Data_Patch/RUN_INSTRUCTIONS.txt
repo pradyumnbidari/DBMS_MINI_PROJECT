@@ -1,0 +1,13 @@
+Extract all files into:
+D:\5TH SEM\DBMS\Mini project\skillsync-complete
+(merge new scripts/ and sql/ folders, do not replace .env.local)
+
+Run in CMD:
+cd /d "D:\5TH SEM\DBMS\Mini project\skillsync-complete"
+SEED_AND_CHECK.cmd
+npm run dev
+
+Optional: MySQL Command Line Client:
+source D:/5TH SEM/DBMS/Mini project/skillsync-complete/sql/final-checks.sql
+
+All data added by seed script is fictional demo data.

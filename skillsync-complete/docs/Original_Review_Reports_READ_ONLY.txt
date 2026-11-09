@@ -1,0 +1,69 @@
+-- SKILLSYNC: MYSQL REPORTS + NOVELTY (MySQL 8.0+)
+-- Run AFTER 01_MySQL_Setup.txt in the same MySQL Workbench connection.
+USE skillsync_review;
+
+-- REPORT 1: Student skill count and average skill level (JOIN + COUNT + AVG)
+SELECT
+    s.student_id, s.full_name,
+    COUNT(ss.skill_id) AS skills_known,
+    ROUND(AVG(ss.proficiency), 2) AS average_proficiency
+FROM students s
+LEFT JOIN student_skills ss ON ss.student_id = s.student_id
+GROUP BY s.student_id, s.full_name
+ORDER BY skills_known DESC;
+
+-- REPORT 2: Most demanded skills across different careers (GROUP BY)
+SELECT
+    sk.skill_name,
+    COUNT(cs.career_id) AS careers_requiring_skill,
+    ROUND(AVG(cs.required_level), 2) AS average_required_level
+FROM skills sk
+JOIN career_skills cs ON cs.skill_id = sk.skill_id
+GROUP BY sk.skill_id, sk.skill_name
+ORDER BY careers_requiring_skill DESC, sk.skill_name;
+
+-- REPORT 3: Average readiness of all students for each career (VIEW + AVG)
+SELECT
+    career_name,
+    ROUND(AVG(readiness_percent), 1) AS average_student_readiness_percent,
+    ROUND(AVG(estimated_learning_hours), 0) AS average_learning_hours
+FROM v_career_readiness
+GROUP BY career_name
+ORDER BY average_student_readiness_percent DESC;
+
+-- NOVELTY DEMO 1: Rank all careers for sample student 1
+SELECT
+    full_name, career_name, readiness_percent, estimated_learning_hours
+FROM v_career_readiness
+WHERE student_id = 1
+ORDER BY readiness_percent DESC, estimated_learning_hours ASC;
+
+-- NOVELTY DEMO 2: ML Engineer personalized missing-skill action plan
+-- priority_score = importance * missing_levels; larger score = address sooner.
+SELECT
+    sk.skill_name,
+    COALESCE(ss.proficiency, 0) AS current_level,
+    cs.required_level AS target_level,
+    cs.importance,
+    GREATEST(cs.required_level - COALESCE(ss.proficiency, 0), 0) AS missing_levels,
+    GREATEST(cs.required_level - COALESCE(ss.proficiency, 0), 0)
+        * sk.hours_per_level AS estimated_learning_hours,
+    cs.importance * GREATEST(cs.required_level - COALESCE(ss.proficiency, 0), 0)
+        AS priority_score
+FROM career_skills cs
+JOIN careers c ON c.career_id = cs.career_id
+JOIN skills sk ON sk.skill_id = cs.skill_id
+LEFT JOIN student_skills ss
+  ON ss.student_id = 1 AND ss.skill_id = cs.skill_id
+WHERE c.career_name = 'ML Engineer'
+  AND COALESCE(ss.proficiency, 0) < cs.required_level
+ORDER BY priority_score DESC, estimated_learning_hours DESC;
+
+-- OPTIONAL REPORT 4: Project totals by academic branch
+SELECT
+    s.branch,
+    COUNT(p.project_id) AS total_projects
+FROM students s
+LEFT JOIN projects p ON p.student_id = s.student_id
+GROUP BY s.branch
+ORDER BY total_projects DESC;

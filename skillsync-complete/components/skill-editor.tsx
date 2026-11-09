@@ -1,0 +1,9 @@
+"use client";
+import {useEffect,useState} from "react";
+type Skill={skill_id:number;skill_name:string;proficiency:number;hours_per_level:number};
+export default function SkillEditor(){const [skills,setSkills]=useState<Skill[]>([]);const [message,setMessage]=useState("");const [busy,setBusy]=useState<number|null>(null);
+ async function load(){const res=await fetch("/api/skills",{cache:"no-store"});const d=await res.json();if(!res.ok)throw Error(d.message);setSkills(d.skills)}
+ useEffect(()=>{load().catch(e=>setMessage(e.message))},[]);
+ async function update(skillId:number,proficiency:number){setBusy(skillId);setMessage("");try{const res=await fetch("/api/skills",{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify({skillId,proficiency})});const d=await res.json();if(!res.ok)throw Error(d.message);await load();setMessage("Saved to MySQL. Career readiness updated.")}catch(e){setMessage(e instanceof Error?e.message:"Update failed")}finally{setBusy(null)}}
+ return <><div><h1 className="heading">My Skills</h1><p className="muted">Adjust each skill proficiency between 0 (not learned) and 5 (advanced). These changes update your own student record.</p></div><div className="panel space-y-2">{skills.map(s=><div className="flex items-center justify-between gap-4 border-b border-slate-700 py-3" key={s.skill_id}><div><div className="font-semibold">{s.skill_name}</div><div className="muted text-xs">Estimated hours per level: {s.hours_per_level}</div></div><select className="input max-w-36" aria-label={`Level for ${s.skill_name}`} disabled={busy!==null} value={s.proficiency} onChange={e=>update(s.skill_id,Number(e.target.value))}>{[0,1,2,3,4,5].map(n=><option value={n} key={n}>Level {n}</option>)}</select></div>)}{message&&<p className="text-emerald-300" role="status">{message}</p>}</div></>;
+}

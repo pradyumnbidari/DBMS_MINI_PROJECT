@@ -1,0 +1,92 @@
+erDiagram
+    app_users {
+        int user_id PK
+        varchar full_name
+        varchar email UK
+        varchar password_hash
+        enum role
+        int student_id FK,UK
+        tinyint is_active
+        timestamp created_at
+    }
+    audit_logs {
+        bigint audit_id PK
+        int actor_user_id FK
+        varchar action
+        json details
+        timestamp created_at
+    }
+    career_skills {
+        int career_id PK,FK
+        int skill_id PK,FK
+        int required_level
+        int importance
+    }
+    careers {
+        int career_id PK
+        varchar career_name UK
+    }
+    certifications {
+        int certification_id PK
+        int student_id FK
+        varchar title
+        varchar issuer
+        date issued_at
+    }
+    learning_progress {
+        int progress_id PK
+        int student_id FK
+        int skill_id FK
+        decimal hours
+        varchar note
+        timestamp created_at
+    }
+    mentor_assignments {
+        int mentor_user_id PK,FK
+        int student_id PK,FK
+        timestamp created_at
+    }
+    projects {
+        int project_id PK
+        int student_id FK
+        varchar project_title
+        varchar project_area
+    }
+    recommendation_history {
+        bigint history_id PK
+        int student_id FK
+        int career_id FK
+        decimal readiness_percent
+        int estimated_learning_hours
+        timestamp created_at
+    }
+    skills {
+        int skill_id PK
+        varchar skill_name UK
+        int hours_per_level
+    }
+    student_skills {
+        int student_id PK,FK
+        int skill_id PK,FK
+        int proficiency
+    }
+    students {
+        int student_id PK
+        varchar full_name
+        varchar email UK
+        varchar branch
+    }
+    students ||--o{ app_users : references
+    app_users ||--o{ audit_logs : references
+    careers ||--o{ career_skills : references
+    skills ||--o{ career_skills : references
+    students ||--o{ certifications : references
+    skills ||--o{ learning_progress : references
+    students ||--o{ learning_progress : references
+    app_users ||--o{ mentor_assignments : references
+    students ||--o{ mentor_assignments : references
+    students ||--o{ projects : references
+    careers ||--o{ recommendation_history : references
+    students ||--o{ recommendation_history : references
+    skills ||--o{ student_skills : references
+    students ||--o{ student_skills : references

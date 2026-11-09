@@ -1,0 +1,7 @@
+import pool from "@/lib/db";
+import {currentUser,unauthorized,forbidden,apiError,invalid} from "@/lib/permissions";
+import {z} from "zod";
+import type {RowDataPacket} from "mysql2";
+const schema=z.object({fullName:z.string().trim().min(2).max(100),branch:z.string().trim().min(2).max(80)});
+export async function GET(){try{const u=await currentUser();if(!u)return unauthorized();if(u.role!=="student"||!u.studentId)return forbidden();const [rows]=await pool.execute<RowDataPacket[]>("SELECT student_id,full_name,email,branch FROM students WHERE student_id=?",[u.studentId]);return Response.json({success:true,profile:rows[0]||null})}catch(e){return apiError(e,"Profile GET")}}
+export async function PUT(req:Request){try{const u=await currentUser();if(!u)return unauthorized();if(u.role!=="student"||!u.studentId)return forbidden();const parsed=schema.safeParse(await req.json());if(!parsed.success)return invalid("Name and branch are required");const c=await pool.getConnection();try{await c.beginTransaction();await c.execute("UPDATE students SET full_name=?,branch=? WHERE student_id=?",[parsed.data.fullName,parsed.data.branch,u.studentId]);await c.execute("UPDATE app_users SET full_name=? WHERE user_id=?",[parsed.data.fullName,u.userId]);await c.execute("INSERT INTO audit_logs(actor_user_id,action,details) VALUES (?,?,?)",[u.userId,"STUDENT_PROFILE_UPDATED",JSON.stringify({studentId:u.studentId})]);await c.commit()}catch(e){await c.rollback();throw e}finally{c.release()}return Response.json({success:true})}catch(e){return apiError(e,"Profile PUT")}}

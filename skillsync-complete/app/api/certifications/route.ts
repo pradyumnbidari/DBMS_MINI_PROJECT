@@ -1,0 +1,8 @@
+import pool from "@/lib/db";
+import {currentUser,unauthorized,forbidden,invalid,apiError,positiveInt} from "@/lib/permissions";
+import type {RowDataPacket} from "mysql2";
+import {z} from "zod";
+const schema=z.object({title:z.string().trim().min(2).max(160),issuer:z.string().trim().min(2).max(120)});
+export async function GET(){try{const u=await currentUser();if(!u)return unauthorized();if(u.role!=="student"||!u.studentId)return forbidden();const [rows]=await pool.execute<RowDataPacket[]>("SELECT certification_id,title,issuer,DATE_FORMAT(issued_at,'%Y-%m-%d') AS issued_at FROM certifications WHERE student_id=? ORDER BY certification_id DESC",[u.studentId]);return Response.json({success:true,certifications:rows})}catch(e){return apiError(e,"Certifications GET")}}
+export async function POST(req:Request){try{const u=await currentUser();if(!u)return unauthorized();if(u.role!=="student"||!u.studentId)return forbidden();const parsed=schema.safeParse(await req.json());if(!parsed.success)return invalid("Enter certification title and issuer");await pool.execute("INSERT INTO certifications(student_id,title,issuer) VALUES (?,?,?)",[u.studentId,parsed.data.title,parsed.data.issuer]);return Response.json({success:true})}catch(e){return apiError(e,"Certifications POST")}}
+export async function DELETE(req:Request){try{const u=await currentUser();if(!u)return unauthorized();if(u.role!=="student"||!u.studentId)return forbidden();const id=positiveInt(new URL(req.url).searchParams.get("id"));if(!id)return invalid();await pool.execute("DELETE FROM certifications WHERE certification_id=? AND student_id=?",[id,u.studentId]);return Response.json({success:true})}catch(e){return apiError(e,"Certifications DELETE")}}

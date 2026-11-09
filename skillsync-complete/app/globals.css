@@ -1,0 +1,17 @@
+@import "tailwindcss";
+:root { color-scheme: dark; }
+body { background:#070c1b; color:#edf5ff; font-family:Arial,Helvetica,sans-serif; }
+a, button, select { cursor:pointer; }
+.input { width:100%; background:#1a2942; border:1px solid #35475f; border-radius:12px; padding:12px 14px; color:white; }
+.input:focus { outline:2px solid #15c69a; outline-offset:1px; }
+.panel { background:#111c32; border:1px solid #263650; border-radius:18px; padding:24px; }
+.btn { background:#08b886; color:#031e18; font-weight:700; padding:11px 17px; border-radius:12px; display:inline-block; }
+.btn:hover { background:#22d4a2; }
+.btn:disabled { opacity:.4; cursor:not-allowed; }
+.btn-muted { background:#23324b; color:#e5edff; border-radius:12px; padding:11px 17px; }
+.pill { background:#053d36; color:#36e2b3; border-radius:40px; padding:6px 12px; font-size:12px; }
+.muted { color:#9db1cf; }
+.heading { font-size:clamp(26px,4vw,35px); font-weight:750; }
+.table { width:100%; border-collapse:collapse; font-size:14px; }
+.table th,.table td { text-align:left; border-bottom:1px solid #2a3850; padding:11px; }
+.table th { color:#a3b9d7; }
